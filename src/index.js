@@ -5,7 +5,9 @@ async function main() {
   await sheets.refreshSettings();
   sheets.startSettingsPolling();
 
-  await bot.launch();
+  await bot.launch({
+    allowedUpdates: ['message', 'callback_query', 'chat_member'],
+  });
   console.log('Бот «Экспресскупе» запущен');
 
   process.once('SIGINT', () => bot.stop('SIGINT'));
