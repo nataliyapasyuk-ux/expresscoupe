@@ -6,7 +6,7 @@ async function main() {
   sheets.startSettingsPolling();
 
   await bot.launch({
-    allowedUpdates: ['message', 'callback_query', 'chat_member'],
+    allowedUpdates: ['message', 'callback_query', 'chat_join_request'],
   });
   console.log('Бот «Экспресскупе» запущен');
 
