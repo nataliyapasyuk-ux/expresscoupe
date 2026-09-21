@@ -23,36 +23,41 @@ function channelButtonKb() {
   ]);
 }
 
-// Приветственный пост при новом подписчике канала — троттлинг, чтобы не заспамить
-// канал, если несколько человек подписываются подряд.
-let lastWelcomePostAt = 0;
-const WELCOME_THROTTLE_MS = 3 * 60 * 1000;
-
-async function maybePostChannelWelcome() {
-  if (!config.channelUsername || !config.botUsername) return;
-  const now = Date.now();
-  if (now - lastWelcomePostAt < WELCOME_THROTTLE_MS) return;
-  lastWelcomePostAt = now;
-  try {
-    await bot.telegram.sendMessage(config.channelUsername, t('msg_channel_welcome'), channelButtonKb());
-  } catch (e) {
-    console.error('[bot] не удалось отправить приветствие подписчику в канал:', e.message);
-  }
-}
-
-// Новый подписчик канала — публикуем приветствие с кнопкой прямо в канале
-// (лично написать боту с своей стороны нельзя — Telegram не даёт ботам
-// первыми писать людям, которые не нажимали /start).
-bot.on('chat_member', async (ctx) => {
-  const update = ctx.chatMember;
-  if (!update || !config.channelUsername) return;
+// Заявка на вступление в канал (канал переключён в режим «Одобрять заявки») —
+// это единственный официально разрешённый Telegram случай, когда бот может
+// написать в личку человеку, который никогда не жал /start. Одобряем заявку
+// сразу (для человека это доля секунды) и присылаем персональное предложение.
+bot.on('chat_join_request', async (ctx) => {
+  const request = ctx.chatJoinRequest;
+  if (!request || !config.channelUsername) return;
   const configuredUsername = config.channelUsername.replace(/^@/, '');
-  if (ctx.chat?.username !== configuredUsername) return;
+  if (request.chat.username !== configuredUsername) return;
 
-  const wasOut = ['left', 'kicked'].includes(update.old_chat_member.status);
-  const isIn = ['member', 'administrator', 'creator'].includes(update.new_chat_member.status);
-  if (wasOut && isIn) {
-    await maybePostChannelWelcome();
+  try {
+    await bot.telegram.approveChatJoinRequest(request.chat.id, request.from.id);
+  } catch (e) {
+    console.error('[bot] не удалось одобрить заявку на вступление:', e.message);
+  }
+
+  const telegramId = request.from.id;
+  const existing = getLead(telegramId);
+  if (existing && existing.stage === 'done') return; // уже получал скидку — не спамим повторно
+
+  upsertLead(telegramId, {
+    username: request.from.username || null,
+    first_name: request.from.first_name || null,
+    channel: 'channel',
+    stage: 'awaiting_consent',
+  });
+
+  try {
+    await bot.telegram.sendMessage(
+      telegramId,
+      `${t('product')} со скидкой ${vars().discount} 👋\n\n${t('msg_channel_welcome')}\n\nЗаймёт 20 секунд.`,
+      getDiscountKb()
+    );
+  } catch (e) {
+    console.error('[bot] не удалось написать новому подписчику в личку:', e.message);
   }
 });
 
