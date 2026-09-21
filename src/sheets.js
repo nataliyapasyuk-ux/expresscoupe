@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   msg_offer: 'Скидка {discount} на {product}. Забрать за 20 секунд.',
   msg_ask_phone: 'Ваша скидка {discount} уже закреплена за вами. Оставьте номер, чтобы менеджер её применил.',
   msg_promo: 'Готово! Ваш промокод: {promo} — скидка {discount}. Назовите его менеджеру при заказе.',
+  msg_channel_welcome: 'Добро пожаловать! 🎉 Скидка {discount} на {product} ждёт вас — заберите её за 20 секунд.',
 };
 
 let sheetsClient = null;
