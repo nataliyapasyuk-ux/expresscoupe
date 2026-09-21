@@ -23,6 +23,39 @@ function channelButtonKb() {
   ]);
 }
 
+// Приветственный пост при новом подписчике канала — троттлинг, чтобы не заспамить
+// канал, если несколько человек подписываются подряд.
+let lastWelcomePostAt = 0;
+const WELCOME_THROTTLE_MS = 3 * 60 * 1000;
+
+async function maybePostChannelWelcome() {
+  if (!config.channelUsername || !config.botUsername) return;
+  const now = Date.now();
+  if (now - lastWelcomePostAt < WELCOME_THROTTLE_MS) return;
+  lastWelcomePostAt = now;
+  try {
+    await bot.telegram.sendMessage(config.channelUsername, t('msg_channel_welcome'), channelButtonKb());
+  } catch (e) {
+    console.error('[bot] не удалось отправить приветствие подписчику в канал:', e.message);
+  }
+}
+
+// Новый подписчик канала — публикуем приветствие с кнопкой прямо в канале
+// (лично написать боту с своей стороны нельзя — Telegram не даёт ботам
+// первыми писать людям, которые не нажимали /start).
+bot.on('chat_member', async (ctx) => {
+  const update = ctx.chatMember;
+  if (!update || !config.channelUsername) return;
+  const configuredUsername = config.channelUsername.replace(/^@/, '');
+  if (ctx.chat?.username !== configuredUsername) return;
+
+  const wasOut = ['left', 'kicked'].includes(update.old_chat_member.status);
+  const isIn = ['member', 'administrator', 'creator'].includes(update.new_chat_member.status);
+  if (wasOut && isIn) {
+    await maybePostChannelWelcome();
+  }
+});
+
 async function postToChannel(ctx, text, photoFileId) {
   if (!config.channelUsername || !config.botUsername) {
     await ctx.reply(
