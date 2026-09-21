@@ -9,7 +9,7 @@
     "dev": "node --watch src/index.js"
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=18"
   },
   "dependencies": {
     "telegraf": "^4.16.3",
