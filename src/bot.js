@@ -1,6 +1,6 @@
 const { Telegraf, Markup } = require('telegraf');
 const config = require('./config');
-const { getLead, upsertLead } = require('./db');
+const { getLead, upsertLead, deleteLead } = require('./db');
 const sheets = require('./sheets');
 const { normalizePhone } = require('./phone');
 const { consentKb, sharePhoneKb, takeInWorkKb } = require('./keyboards');
@@ -66,6 +66,13 @@ bot.command('post_channel', async (ctx, next) => {
   if (!config.ownerId || ctx.from.id !== config.ownerId) return next();
   const text = ctx.message.text.replace(/^\/post_channel(@\w+)?\s*/s, '').trim();
   await postToChannel(ctx, text, null);
+});
+
+// Сброс своей истории в боте — для тестов сценария владельцем
+bot.command('reset_me', async (ctx, next) => {
+  if (!config.ownerId || ctx.from.id !== config.ownerId) return next();
+  deleteLead(ctx.from.id);
+  await ctx.reply('Готово, бот вас «забыл» — можно заново пройти сценарий через /start.', Markup.removeKeyboard());
 });
 
 bot.on('photo', async (ctx, next) => {
