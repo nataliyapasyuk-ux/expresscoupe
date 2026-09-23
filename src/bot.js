@@ -23,10 +23,13 @@ function t(key) {
   return sheets.render(s[key] || '', vars());
 }
 
+const PORTFOLIO_URL = 'https://disk.yandex.ru/d/tRqzmtl9AHyNXw';
+
 function menuKb() {
-  return Markup.inlineKeyboard(
-    Object.entries(INTERESTS).map(([key, i]) => [Markup.button.callback(i.button, `want:${key}`)])
-  );
+  return Markup.inlineKeyboard([
+    ...Object.entries(INTERESTS).map(([key, i]) => [Markup.button.callback(i.button, `want:${key}`)]),
+    [Markup.button.url('📸 Примеры работ', PORTFOLIO_URL)],
+  ]);
 }
 
 function channelButtonKb() {
