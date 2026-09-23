@@ -25,6 +25,14 @@ let sheetsClient = null;
 let cache = { values: { ...DEFAULT_SETTINGS }, fetchedAt: 0 };
 
 async function getAuth() {
+  if (config.googleServiceAccountB64) {
+    const credentials = JSON.parse(Buffer.from(config.googleServiceAccountB64, 'base64').toString('utf8'));
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    return auth.getClient();
+  }
   if (!fs.existsSync(config.googleServiceAccountFile)) {
     throw new Error(
       `Не найден файл ключа сервисного аккаунта: ${config.googleServiceAccountFile}. ` +
@@ -86,7 +94,7 @@ async function appendLead(lead) {
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId: config.sheetId,
     range: `${config.leadsSheetName}!A1`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
       values: [[
@@ -112,7 +120,7 @@ async function updateLeadComment(rowNumber, comment) {
   await sheets.spreadsheets.values.update({
     spreadsheetId: config.sheetId,
     range: `${config.leadsSheetName}!G${rowNumber}`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     requestBody: { values: [[comment]] },
   });
 }
