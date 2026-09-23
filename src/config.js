@@ -12,6 +12,8 @@ module.exports = {
   leadsChatId: required('LEADS_CHAT_ID'),
   sheetId: required('SHEET_ID'),
   googleServiceAccountFile: path.resolve(process.env.GOOGLE_SERVICE_ACCOUNT_FILE || './service-account.json'),
+  // Ключ целиком в base64 — переживает редеплой, в отличие от файла вне гита
+  googleServiceAccountB64: process.env.GOOGLE_SERVICE_ACCOUNT_B64 || null,
   leadsSheetName: process.env.LEADS_SHEET_NAME || 'Лиды',
   settingsSheetName: process.env.SETTINGS_SHEET_NAME || 'Настройки',
   settingsRefreshMs: Number(process.env.SETTINGS_REFRESH_MS || 120000),
