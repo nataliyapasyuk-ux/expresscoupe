@@ -53,4 +53,9 @@ function upsertLead(telegramId, fields) {
   return store[key];
 }
 
-module.exports = { getLead, upsertLead };
+function deleteLead(telegramId) {
+  delete store[String(telegramId)];
+  saveAtomic(store);
+}
+
+module.exports = { getLead, upsertLead, deleteLead };
